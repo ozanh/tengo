@@ -241,8 +241,8 @@ L:
 		case token.Period:
 			p.next()
 
-			switch p.token {
-			case token.Ident:
+			switch {
+			case p.token == token.Ident || p.token.IsKeyword():
 				x = p.parseSelector(x)
 			default:
 				pos := p.pos
@@ -352,8 +352,18 @@ func (p *Parser) parseSelector(x Expr) Expr {
 	if p.trace {
 		defer untracep(tracep(p, "Selector"))
 	}
-
-	sel := p.parseIdent()
+	var sel *Ident
+	if p.token == token.Ident {
+		sel = p.parseIdent()
+	} else if p.token.IsKeyword() {
+		sel = &Ident{
+			NamePos: p.pos,
+			Name:    p.tokenLit,
+		}
+		p.next()
+	} else {
+		p.expect(token.Ident)
+	}
 	return &SelectorExpr{Expr: x, Sel: &StringLit{
 		Value:    sel.Name,
 		ValuePos: sel.NamePos,

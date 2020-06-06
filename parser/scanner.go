@@ -86,12 +86,19 @@ func (s *Scanner) Scan() (
 	// determine token value
 	switch ch := s.ch; {
 	case isLetter(ch):
+		offset := s.offset
 		literal = s.scanIdentifier()
 		tok = token.Lookup(literal)
 		switch tok {
 		case token.Ident, token.Break, token.Continue, token.Return,
 			token.Export, token.True, token.False, token.Undefined:
 			insertSemi = true
+		default:
+			// keyword as selector exception
+			// under some circumstances no space is allowed between . and keyword
+			if offset > 0 && s.src[offset-1] == '.' {
+				insertSemi = true
+			}
 		}
 	case '0' <= ch && ch <= '9':
 		insertSemi = true

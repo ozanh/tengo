@@ -2993,6 +2993,33 @@ func() {
 }()
 `, nil, 9)
 
+	// test keywords as selectors
+	expectRun(t, `	
+a := {"if": true}
+a.in = 1
+a.error = {}
+a.error.in = 2
+a.return = "x"
+for k, v in
+a {
+	out = k
+}
+if(a.in == 1) {
+	a.return = func(d) {
+		if(d == "abc") {
+			out = {"in": a.error.in}.in
+		} else {
+			out = d
+		}
+	}
+	a.return(a.if ? "abc": "def")
+}
+`,
+		nil, 2)
+
+	expectRun(t, `a := {"in": "foo"}; a.in = 2; out = a.in`,
+		nil, 2)
+
 	expectError(t, `a := {b: {c: 1}}; a.d.c = 2`,
 		nil, "not index-assignable")
 	expectError(t, `a := [1, 2, 3]; a.b = 2`,

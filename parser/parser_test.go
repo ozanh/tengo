@@ -1424,6 +1424,34 @@ func TestParseSelector(t *testing.T) {
 				token.Assign, p(1, 13)))
 	})
 
+	// test keywords as selectors
+	expectParse(t, "a.in", func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				selectorExpr(
+					ident("a", p(1, 1)),
+					stringLit("in", p(1, 3)))))
+	})
+
+	expectParse(t, "a.in.c", func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				selectorExpr(
+					selectorExpr(
+						ident("a", p(1, 1)),
+						stringLit("in", p(1, 3))),
+					stringLit("c", p(1, 6)))),
+		)
+	})
+
+	expectParseString(t, `for k, v in
+	a {}`, "for k, v in a {}")
+	expectParseString(t, `for k, v in a.in{
+	}`, "for k, v in a.in {}")
+	expectParseString(t, `if(a.if){}`, "if (a.if) {}")
+	expectParseString(t, `if(a.return==
+		"x"){}`, "if ((a.return == \"x\")) {}")
+
 	expectParseError(t, `a.(b.c)`)
 }
 
